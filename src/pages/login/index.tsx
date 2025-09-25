@@ -1,21 +1,52 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Input } from "../../components/Input";
 import { useState, type FormEvent } from "react";
+
+import { auth } from "../../services/firebaseConnection"
+import { signInWithEmailAndPassword } from "firebase/auth"
 
 export function Login() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const navigate = useNavigate();
 
     function handleSubmit(event: FormEvent) {
         event.preventDefault();
-        console.log({
-            email,
-            password,
-        });
+
+        if (!email.trim() || !password.trim()) {
+            alert("⚠️ Preencha todos os campos!");
+            return;
+        }
+
+        signInWithEmailAndPassword(auth, email, password)
+            .then((userCredential) => {
+
+                console.log("✅ Login realizado:", userCredential.user);
+                navigate("/admin", { replace: true })
+            })
+            .catch((error) => {
+                // Trata erros comuns
+                switch (error.code) {
+                    case "auth/invalid-email":
+                        alert("Email inválido!");
+                        break;
+                    case "auth/user-not-found":
+                        alert("Usuário não encontrado!");
+                        break;
+                    case "auth/wrong-password":
+                        alert("Senha incorreta!");
+                        break;
+                    default:
+                        alert("Erro ao tentar fazer login.");
+                }
+                console.error("❌ Erro no login:", error);
+            });
+
+
     }
 
     return (
-        <div className="flex flex-col items-center justify-start w-full h-screen pt-[30%] select-none">
+        <div className="flex flex-col items-center py-30 w-full h-screen select-none">
             <Link to="/">
                 <h1 className="mb-7 mt-11 text-5xl font-bold text-white">
                     Link
